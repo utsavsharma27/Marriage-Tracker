@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 window.TRACKER_CONFIG = {
   // Apps Script web app URL (see README, "Enable editing"). Leave empty for a read-only site.
-  writeUrl: "https://script.google.com/macros/s/AKfycbzpGa73xpuQdAQKIHwz2LNosx7-1rn4wUx0wrF_C6rAaDUvYNZN4E7zVv2aKEx8k2Hg/exec",
+  writeUrl: "https://script.google.com/macros/s/AKfycbwlNBYph9r9_p4JDQWshg1JBHhM8Hkl2lVyAe-4zEQ/dev",
   sources: {
     guests:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=771095474&single=true&output=csv",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
     rooms:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=210364121&single=true&output=csv",   // tab "Copy of Room Allocation1"   (room number -> guest)

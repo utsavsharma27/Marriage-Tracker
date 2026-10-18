@@ -14,11 +14,11 @@ window.TRACKER_CONFIG = {
   // Apps Script web app URL (see README, "Enable editing"). Leave empty for a read-only site.
   writeUrl: "",
   sources: {
-    guests:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=771095474&single=true&output=csv",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
-    rooms:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=210364121&single=true&output=csv",   // tab "Copy of Room Allocation1"   (room number -> guest)
-    works:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=1375866172&single=true&output=csv",   // tab "works to do"               (pending work)
-    advances: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=1432770904&single=true&output=csv",   // tab "Advances"                  (payments / balances)
-    summary:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=102000808&single=true&output=csv",   // tab "summary"                   (expenses)
+    guests:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=771095474&single=true&output=csv",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
+    rooms:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=210364121&single=true&output=csv",   // tab "Copy of Room Allocation1"   (room number -> guest)
+    works:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=1375866172&single=true&output=csv",   // tab "works to do"               (pending work)
+    advances: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=1432770904&single=true&output=csv",   // tab "Advances"                  (payments / balances)
+    summary:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNcFyXdsa3r52DMrs7yn6BhiJxha4hLX_lthIh2swE1jdqSWLyLeCZ5-qYHiZ7fYH_SQFLi6iV547i/pub?gid=102000808&single=true&output=csv",   // tab "summary"                   (expenses)
   },
   // Local fallback files (exported from the workbook by scripts/export_csv.py)
   local: {

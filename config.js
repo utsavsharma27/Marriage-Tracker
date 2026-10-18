@@ -11,6 +11,8 @@
 // https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=123456&single=true&output=csv
 // ---------------------------------------------------------------------------
 window.TRACKER_CONFIG = {
+  // Apps Script web app URL (see README, "Enable editing"). Leave empty for a read-only site.
+  writeUrl: "",
   sources: {
     guests:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=771095474&single=true&output=csv",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
     rooms:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=210364121&single=true&output=csv",   // tab "Copy of Room Allocation1"   (room number -> guest)

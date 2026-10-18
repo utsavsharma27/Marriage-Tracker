@@ -163,7 +163,7 @@
     const saree = g ? (g.sarees > 0 ? `<span class="ok">Yes, ${g.sarees}</span>` : `<span class="muted">No</span>`) : `<span class="muted">—</span>`;
     const shirt = g && g.shirt ? esc(g.shirt) : `<span class="muted">not entered</span>`;
     return `<div class="card">
-      <h3>${esc(p.name)}</h3>
+      <h3>${esc(p.name)}</h3>${writeBtn(p.name, "Edit")}
       <div>${roomsHtml}</div>
       <dl>
         <dt>Category</dt><dd>${g ? esc(g.category || "—") : "not in guest list"}</dd>
@@ -215,7 +215,7 @@
     }
     const k = norm(query);
     const hits = [...D.people.values()].filter((p) => norm(p.name).includes(k));
-    if (!hits.length) { box.innerHTML = `<div class="empty">No guest matches "${esc(query)}".</div>`; return; }
+    if (!hits.length) { box.innerHTML = `<div class="empty">No guest matches "${esc(query)}".</div>${canWrite() ? `<p>${writeBtn(query, "Add \"" + esc(query) + "\" as a new guest")}</p>` : ""}`; return; }
     box.innerHTML = `<div class="grid">${hits.slice(0, 60).map(guestCard).join("")}</div>
       ${hits.length > 60 ? `<p class="muted">Showing 60 of ${hits.length}. Type more letters to narrow down.</p>` : ""}`;
   };
@@ -257,7 +257,7 @@
       </div>
       <div class="table-wrap"><table><thead><tr><th>Task</th><th>Initiated?</th><th>Status</th><th>Priority</th><th>Remark</th></tr></thead><tbody>
       ${rows.map((w) => `<tr><td>${esc(w.task)}</td><td>${esc(w.initiated || "—")}</td>
-        <td class="${w.status === "done" ? "ok" : "warn"}">${esc(w.statusText || "—")}</td><td>${esc(w.priority || "—")}</td><td>${esc(w.remark)}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">Nothing here.</td></tr>`}
+        <td>${canWrite() ? `<select class="work-status" data-task="${esc(w.task)}"><option value="pending" ${w.status !== "done" ? "selected" : ""}>pending</option><option value="done" ${w.status === "done" ? "selected" : ""}>done</option></select>` : `<span class="${w.status === "done" ? "ok" : "warn"}">${esc(w.statusText || "—")}</span>`}</td><td>${esc(w.priority || "—")}</td><td>${esc(w.remark)}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">Nothing here.</td></tr>`}
       </tbody></table></div>`;
     $("#f-work").value = f;
     $("#f-work").onchange = (e) => { window.__workFilter = e.target.value; VIEWS.work(); };
@@ -274,10 +274,10 @@
         <label><input type="checkbox" id="f-pay" ${f ? "checked" : ""}> Only show balances still due</label>
         <span class="muted">Advances paid ₹${fmt(totalPaid)} · Balance still due ₹${fmt(totalBal)}${unknown ? ` · ${unknown} rows with no total entered` : ""}</span>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Purpose</th><th>Contact</th><th>Total</th><th>Advance paid</th><th>Balance</th><th>Date</th></tr></thead><tbody>
+      <div class="table-wrap"><table><thead><tr><th>Purpose</th><th>Contact</th><th>Total</th><th>Advance paid</th><th>Balance</th><th>Date</th><th></th></tr></thead><tbody>
       ${rows.map((a) => `<tr><td>${esc(a.purpose)}</td><td>${esc(a.contact)}<br><span class="muted">${esc(a.phone)}</span></td>
         <td>${fmt(a.total)}</td><td>${fmt(a.paid)}</td>
-        <td class="${a.balance === null ? "muted" : a.balance > 0 ? "warn" : "ok"}">${a.balance === null ? "not entered" : fmt(a.balance)}</td><td>${esc(a.date)}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">No payments to show.</td></tr>`}
+        <td class="${a.balance === null ? "muted" : a.balance > 0 ? "warn" : "ok"}">${a.balance === null ? "not entered" : fmt(a.balance)}</td><td>${esc(a.date)}</td><td>${canWrite() ? `<button class="tab" data-pay="${esc(a.purpose)}">+ Payment</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="7" class="muted">No payments to show.</td></tr>`}
       </tbody></table></div>`;
     $("#f-pay").onchange = (e) => { window.__payFilter = e.target.checked; VIEWS.pay(); };
   };
@@ -320,6 +320,145 @@
   }
   function sumAll() { return ["actual", "common"].reduce((s, k) => s + D.expenses[k].reduce((a, x) => a + x.amount, 0), 0); }
 
+
+  // ---------- editing (writes go to the Google Sheet through the Apps Script web app) ----------
+  const canWrite = () => !!(window.TRACKER_CONFIG && window.TRACKER_CONFIG.writeUrl);
+  const getPw = () => { try { return sessionStorage.getItem("trackerPw") || ""; } catch (e) { return ""; } };
+  const setPw = (v) => { try { sessionStorage.setItem("trackerPw", v); } catch (e) {} };
+  function writeBtn(name, label) { return canWrite() ? `<button class="tab" data-edit-name="${esc(name)}">${label}</button>` : ""; }
+
+  async function postWrite(payload) {
+    const r = await fetch(window.TRACKER_CONFIG.writeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },   // avoids a CORS preflight on Apps Script
+      body: JSON.stringify(Object.assign({ password: getPw() }, payload)),
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "Save failed");
+    return j;
+  }
+
+  const EDIT_FIELDS = [
+    { k: "category", h: "Category Relative/Friend", label: "Category (R / F / O / S / BS …)", type: "text" },
+    { k: "pax", h: "Expect. PAX", label: "Expected PAX", type: "number" },
+    { k: "invitation", h: "Invitation", label: "Invitation (B / M)", type: "text" },
+    { k: "function", h: "Marriage function", label: "Attends marriage function", type: "yn" },
+    { k: "roomsDay1", h: "Rooms Required day-I", label: "Rooms day I", type: "number" },
+    { k: "roomsDay2", h: "Rooms Required Day-II", label: "Rooms day II", type: "number" },
+    { k: "sweets", h: "Sweets", label: "Sweets given", type: "yn" },
+    { k: "gift", h: "Return Gift", label: "Return gift given", type: "yn" },
+    { k: "waSent", h: "Invitation Sent on WA", label: "Invitation sent on WhatsApp", type: "yn" },
+    { k: "shirt", h: "Shirt Size", label: "Shirt size", type: "number" },
+    { k: "sarees", h: "Sarees", label: "Number of sarees", type: "number" },
+  ];
+
+  function openEditor(name) {
+    const p = D.people.get(norm(name)) || { name, guest: null, rooms: [] };
+    const g = p.guest || { category: "", pax: null, invitation: "", function: false, roomsDay1: null, roomsDay2: null,
+                           sweets: false, gift: false, waSent: false, shirt: "", sarees: 0 };
+    const val = (f) => {
+      const v = g[f.k === "category" ? "category" : f.k];
+      return f.type === "yn" ? !!v : (v ?? "");
+    };
+    const rows = EDIT_FIELDS.map((f) => {
+      const v = val(f);
+      const input = f.type === "yn"
+        ? `<input type="checkbox" data-k="${f.k}" ${v ? "checked" : ""}>`
+        : `<input data-k="${f.k}" type="${f.type === "number" ? "number" : "text"}" value="${esc(v)}" style="width:100%">`;
+      return `<label style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0">${esc(f.label)} ${input}</label>`;
+    }).join("");
+    const wrap = document.createElement("div");
+    wrap.id = "editor";
+    wrap.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto;z-index:50";
+    wrap.innerHTML = `<div class="card" style="max-width:460px;width:100%;margin-top:30px">
+      <h3>${p.guest ? "Edit" : "Add new guest:"} ${esc(p.name)}</h3>
+      <p class="muted" style="margin:0 0 8px">Changes are written to the Google Sheet. Leave a field as it is to keep it.</p>
+      ${rows}
+      <label style="display:block;margin-top:10px">Edit password <input id="ed-pw" type="password" value="${esc(getPw())}" style="width:100%"></label>
+      <div id="ed-msg" class="err" style="display:none"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="tab" id="ed-cancel">Cancel</button>
+        <button class="tab active" id="ed-save">Save to sheet</button>
+      </div></div>`;
+    document.body.appendChild(wrap);
+    wrap.addEventListener("click", (e) => { if (e.target === wrap || e.target.id === "ed-cancel") wrap.remove(); });
+    $("#ed-save").addEventListener("click", async () => {
+      const btn = $("#ed-save"); const msg = $("#ed-msg");
+      msg.style.display = "none";
+      const changed = {}; const local = {};
+      EDIT_FIELDS.forEach((f) => {
+        const el = wrap.querySelector(`[data-k="${f.k}"]`);
+        const now = f.type === "yn" ? el.checked : el.value.trim();
+        const before = val(f);
+        const same = f.type === "yn" ? now === !!before : String(now) === String(before ?? "");
+        if (same) return;
+        const h = f.type === "yn" ? (now ? "y" : "") : now;
+        changed[f.h] = h;
+        local[f.k] = f.type === "yn" ? !!now : (f.type === "number" ? (now === "" ? null : Number(now)) : now);
+      });
+      if (!Object.keys(changed).length) { wrap.remove(); return; }
+      setPw($("#ed-pw").value);
+      btn.disabled = true; btn.textContent = "Saving…";
+      try {
+        if (p.guest) await postWrite({ action: "updateGuest", name: p.name, fields: changed });
+        else await postWrite({ action: "addGuest", name: p.name, fields: changed });
+        applyGuestLocal(p.name, local);
+        wrap.remove();
+        show(current);
+      } catch (err) {
+        msg.textContent = "Not saved: " + err.message; msg.style.display = "block";
+        btn.disabled = false; btn.textContent = "Save to sheet";
+      }
+    });
+  }
+
+  function applyGuestLocal(name, local) {
+    const k = norm(name);
+    const p = D.people.get(k) || { name, guest: null, rooms: [] };
+    if (!D.people.has(k)) D.people.set(k, p);
+    if (!p.guest) {
+      p.guest = { name, category: "", pax: null, invitation: "", function: false, roomsDay1: null, roomsDay2: null,
+                  sweets: false, gift: false, waSent: false, shirt: "", sarees: 0 };
+      D.guests.push(p.guest);
+    }
+    Object.assign(p.guest, local);
+    if ("shirt" in local) p.guest.shirt = String(local.shirt ?? "");
+  }
+
+  // Work status: change the dropdown, the sheet is updated straight away
+  function bindTableEvents() {
+    $("#view").addEventListener("change", async (e) => {
+      const sel = e.target.closest(".work-status");
+      if (!sel) return;
+      const w = D.works.find((x) => x.task === sel.dataset.task);
+      if (!w) return;
+      try {
+        await postWrite({ action: "updateWork", task: w.task, status: sel.value });
+        w.status = sel.value; w.statusText = sel.value;
+        show(current);
+      } catch (err) { alert("Not saved: " + err.message); show(current); }
+    });
+    $("#view").addEventListener("click", async (e) => {
+      const ed = e.target.closest("[data-edit-name]");
+      if (ed) { openEditor(ed.dataset.editName); return; }
+      const pay = e.target.closest("[data-pay]");
+      if (pay) {
+        const a = D.advances.find((x) => x.purpose === pay.dataset.pay);
+        const amount = Number(window.prompt(`Amount received/paid for "${a.purpose}" (₹):`, ""));
+        if (!amount || amount <= 0) return;
+        const d = new Date();
+        const date = [String(d.getDate()).padStart(2, "0"), String(d.getMonth() + 1).padStart(2, "0"), d.getFullYear()].join(".");
+        const newPaid = (a.paid || 0) + amount;
+        try {
+          await postWrite({ action: "updateAdvance", purpose: a.purpose, paid: newPaid, date });
+          a.paid = newPaid; a.date = date;
+          if (a.total !== null) a.balance = a.total - newPaid;
+          show(current);
+        } catch (err) { alert("Not saved: " + err.message); }
+      }
+    });
+  }
+
   // ---------- wiring ----------
   function show(view) {
     current = view;
@@ -337,6 +476,7 @@
       const live = [g, r, w, a, s].filter((x) => x.source === "live").length;
       $("#status").textContent = `${D.guests.length} guests · ${D.rooms.size} rooms · data: ${live ? "live Google Sheet" : "bundled copy"}`;
       renderStats();
+      bindTableEvents();
       show("find");
     } catch (e) {
       $("#status").textContent = "Could not load data.";

@@ -46,3 +46,25 @@ then commit the new `data/` files.
 - Room colours come from the room-cluster legend in `config.js` (`clusterOfRoom`). Edit that function if a room moves cluster.
 - Column N of `FINAL` has no heading in the sheet, so the site does not use it.
 - Names are matched ignoring case, spaces and punctuation between the guest list and the room sheet.
+
+## 4. Enable editing from the website (optional)
+The published Google Sheet links are read-only. Editing needs a small script attached to the sheet.
+
+1. Open the Google Sheet → **Extensions → Apps Script**.
+2. Delete any code in the editor, paste the contents of `scripts/apps-script/Code.gs`, and save.
+3. In the editor, select the function `setup` in the toolbar and click **Run**. Approve the permissions prompt.
+4. Click **Project Settings** (gear icon) → **Script properties** → open `EDIT_PASSWORD` and set your own password. Save.
+5. Click **Deploy → New deployment → Select type: Web app**.
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+   - Click **Deploy**, then copy the **Web app URL** (ends in `/exec`).
+6. Open that URL in a browser. You should see `{"ok":true,...}`. This confirms the script works.
+7. In `config.js`, paste the URL into `writeUrl`, then commit the file to GitHub.
+
+After that, the site shows **Edit** on guest cards, a status dropdown on pending work, and **+ Payment** on payment rows. Each save is written to the sheet. The password is asked once per browser session.
+
+Notes:
+- The password is checked by the script, so it is never stored in the public code. Anyone with the password can change the sheet, so keep it private.
+- The site shows the change straight away. The published CSV links can take a few minutes to show the change after a reload.
+- Adding a new guest inserts a row below the last guest. The totals row at the bottom of `FINAL` may need its range extended.
+- Room changes (moving a guest to another room) are not in the site yet. Tell me if you want them added.

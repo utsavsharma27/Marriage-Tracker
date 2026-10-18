@@ -12,11 +12,11 @@
 // ---------------------------------------------------------------------------
 window.TRACKER_CONFIG = {
   sources: {
-    guests:   "",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
-    rooms:    "",   // tab "Copy of Room Allocation1"   (room number -> guest)
-    works:    "",   // tab "works to do"               (pending work)
-    advances: "",   // tab "Advances"                  (payments / balances)
-    summary:  "",   // tab "summary"                   (expenses)
+    guests:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=771095474&single=true&output=csv",   // tab "FINAL"                      (names, PAX, shirt size, sarees, ...)
+    rooms:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=210364121&single=true&output=csv",   // tab "Copy of Room Allocation1"   (room number -> guest)
+    works:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=1375866172&single=true&output=csv",   // tab "works to do"               (pending work)
+    advances: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=1432770904&single=true&output=csv",   // tab "Advances"                  (payments / balances)
+    summary:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfySR-MRMVHO0GZ1iJ7IFZioE6PrKw8GjKqZyx0UMk5AqkqB5Tk_e575RrsZ2LtA/pub?gid=102000808&single=true&output=csv",   // tab "summary"                   (expenses)
   },
   // Local fallback files (exported from the workbook by scripts/export_csv.py)
   local: {

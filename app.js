@@ -374,6 +374,7 @@
       <h3>${p.guest ? "Edit" : "Add new guest:"} ${esc(p.name)}</h3>
       <p class="muted" style="margin:0 0 8px">Changes are written to the Google Sheet. Leave a field as it is to keep it.</p>
       ${rows}
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0">Room(s) <input id="ed-rooms" type="text" value="${esc([...new Set(p.rooms)].join(", "))}" placeholder="e.g. 104 or 104, 204" style="width:60%"></label>
       <label style="display:block;margin-top:10px">Edit password <input id="ed-pw" type="password" value="${esc(getPw())}" style="width:100%"></label>
       <div id="ed-msg" class="err" style="display:none"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
@@ -396,13 +397,26 @@
         changed[f.h] = h;
         local[f.k] = f.type === "yn" ? !!now : (f.type === "number" ? (now === "" ? null : Number(now)) : now);
       });
-      if (!Object.keys(changed).length) { wrap.remove(); return; }
+      const newRooms = ($("#ed-rooms").value || "").replace(/\s+/g, "").split(",").filter(Boolean);
+      const oldRooms = [...new Set(p.rooms)];
+      const roomsChanged = newRooms.join(",") !== oldRooms.join(",");
+      if (roomsChanged && newRooms.some((r) => !/^\d{3}$/.test(r))) {
+        msg.textContent = "Room numbers must be 3 digits, separated by commas (e.g. 104, 204)."; msg.style.display = "block";
+        return;
+      }
+      if (!Object.keys(changed).length && !roomsChanged && p.guest) { wrap.remove(); return; }
       setPw($("#ed-pw").value);
       btn.disabled = true; btn.textContent = "Saving…";
       try {
-        if (p.guest) await postWrite({ action: "updateGuest", name: p.name, fields: changed });
-        else await postWrite({ action: "addGuest", name: p.name, fields: changed });
-        applyGuestLocal(p.name, local);
+        if (Object.keys(changed).length || !p.guest) {
+          if (p.guest) await postWrite({ action: "updateGuest", name: p.name, fields: changed });
+          else await postWrite({ action: "addGuest", name: p.name, fields: changed });
+          applyGuestLocal(p.name, local);
+        }
+        if (roomsChanged) {
+          await postWrite({ action: "setRooms", name: p.name, rooms: newRooms });
+          applyRoomsLocal(p.name, newRooms);
+        }
         wrap.remove();
         show(current);
       } catch (err) {
@@ -410,6 +424,19 @@
         btn.disabled = false; btn.textContent = "Save to sheet";
       }
     });
+  }
+
+  // Update the in-page room map after a room change (the sheet is updated by the script)
+  function applyRoomsLocal(name, newRooms) {
+    const k = norm(name);
+    D.rooms.forEach((r) => { r.occupants = r.occupants.filter((o) => norm(o.name) !== k); });
+    const p = D.people.get(k);
+    const cat = p && p.guest ? p.guest.category : "";
+    newRooms.forEach((room) => {
+      if (!D.rooms.has(room)) D.rooms.set(room, { room, cluster: window.clusterOfRoom(room), occupants: [] });
+      D.rooms.get(room).occupants.push({ name, category: cat });
+    });
+    if (p) p.rooms = [...newRooms];
   }
 
   function applyGuestLocal(name, local) {

@@ -11,6 +11,10 @@
 // https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=123456&single=true&output=csv
 // ---------------------------------------------------------------------------
 window.TRACKER_CONFIG = {
+  // Rooms available on each day (change here if the numbers change)
+  roomCapacity: { day1: 20, day2: 30 },
+  // Guest rows that are left out of the rooms calculation (matched by name, case-insensitive)
+  roomsExcluded: ["LADKI WALE"],
   // Apps Script web app URL (see README, "Enable editing"). Leave empty for a read-only site.
   writeUrl: "https://script.google.com/macros/s/AKfycbzpGa73xpuQdAQKIHwz2LNosx7-1rn4wUx0wrF_C6rAaDUvYNZN4E7zVv2aKEx8k2Hg/exec",
   sources: {

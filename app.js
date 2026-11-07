@@ -222,11 +222,38 @@
     </div>`;
   }
 
+  // Rooms panel for the opening page: capacity per day, rooms taken by checked-in guests, rooms left
+  function roomsPanel() {
+    const cap = (window.TRACKER_CONFIG && window.TRACKER_CONFIG.roomCapacity) || { day1: 0, day2: 0 };
+    const excluded = new Set(((window.TRACKER_CONFIG && window.TRACKER_CONFIG.roomsExcluded) || []).map(norm));
+    const sumRooms = (key, checkedOnly) => D.guests
+      .filter((g) => !excluded.has(norm(g.name)))
+      .filter((g) => !checkedOnly || g.checkedIn)
+      .reduce((s, g) => s + (g[key] || 0), 0);
+    const day = (label, key, capacity) => {
+      const occupied = sumRooms(key, true);
+      const planned = sumRooms(key, false);
+      const left = capacity - occupied;
+      const cls = left < 0 ? "bad" : left <= 3 ? "warn" : "ok";
+      return `<div class="card">
+        <h3>${label}</h3>
+        <dl>
+          <dt>Rooms available in total</dt><dd>${capacity}</dd>
+          <dt>Occupied (checked in)</dt><dd><b>${occupied}</b></dd>
+          <dt>Rooms left</dt><dd class="${cls}"><b>${left}</b></dd>
+          <dt>Planned (all guests)</dt><dd class="muted">${planned}</dd>
+        </dl>
+      </div>`;
+    };
+    return `<div class="section-title">Rooms</div>
+      <div class="grid">${day("Day 1", "roomsDay1", cap.day1)}${day("Day 2", "roomsDay2", cap.day2)}</div>`;
+  }
+
   VIEWS.find = function (q) {
     const box = $("#view");
     const query = q.trim();
     if (!query) {
-      box.innerHTML = `<div class="empty">Type a guest name or a room number above. Examples: <b>Akash</b>, <b>Sonu</b>, <b>104</b>, <b>215</b>.</div>`;
+      box.innerHTML = roomsPanel() + `<div class="empty">Type a guest name or a room number above. Examples: <b>Akash</b>, <b>Sonu</b>, <b>104</b>, <b>215</b>.</div>`;
       return;
     }
     if (/^\d{2,3}$/.test(query)) {

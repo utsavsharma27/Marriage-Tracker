@@ -1,12 +1,13 @@
 // Utsav Wedding Tracker - write-back API (bound to the wedding Google Sheet).
-// Paste into Extensions > Apps Script. Redeploy as a NEW VERSION after each change (README).
+// Paste into Extensions > Apps Script. After every change: Deploy > Manage deployments > pencil > New version > Deploy.
 
 const TAB = { guests: "FINAL", works: "works to do", advances: "Advances", rooms: "Copy of Room Allocation1" };
-// Only these guest columns can be changed from the website.
+// Guest columns the website may change. Missing ones are added to the right of FINAL automatically.
 const GUEST_FIELDS = [
   "Category Relative/Friend", "Expect. PAX", "Invitation", "Marriage function",
   "Rooms Required day-I", "Rooms Required Day-II", "Sweets", "Return Gift",
-  "Invitation Sent on WA", "Shirt Size", "Sarees"
+  "Invitation Sent on WA", "Shirt Size", "Sarees",
+  "Checked in", "Saree given", "Shirt given"
 ];
 
 function norm(s) { return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim(); }
@@ -16,7 +17,6 @@ function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setM
 function doGet() { return out({ ok: true, service: "utsav-tracker" }); }
 
 // Password is OPTIONAL. If a script property named "password" exists, the website must send it.
-// Delete that property in Project Settings > Script properties to turn the check off.
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
@@ -43,6 +43,18 @@ function headerMap(sh) {
   h.forEach((t, i) => { const k = norm(t); if (k && !(k in m)) m[k] = i + 1; });
   return m;
 }
+// Adds any missing guest columns to the end of the header row, then returns the header map.
+function guestHeaderMap(sh) {
+  let hm = headerMap(sh);
+  GUEST_FIELDS.forEach((h) => {
+    if (!hm[norm(h)]) {
+      const c = sh.getLastColumn() + 1;
+      sh.getRange(1, c).setValue(h);
+      hm = headerMap(sh);
+    }
+  });
+  return hm;
+}
 function findRow(sh, col, value) {
   const n = sh.getLastRow() - 1;
   if (n < 1) return 0;
@@ -61,7 +73,7 @@ function writeFields(sh, row, hm, fields) {
 
 function updateGuest(name, fields) {
   const sh = SpreadsheetApp.getActive().getSheetByName(TAB.guests);
-  const hm = headerMap(sh);
+  const hm = guestHeaderMap(sh);
   const row = findRow(sh, hm[norm("Name")], name);
   if (!row) return { ok: false, error: "Guest not found: " + name };
   writeFields(sh, row, hm, fields);
@@ -70,7 +82,7 @@ function updateGuest(name, fields) {
 
 function addGuest(name, fields) {
   const sh = SpreadsheetApp.getActive().getSheetByName(TAB.guests);
-  const hm = headerMap(sh);
+  const hm = guestHeaderMap(sh);
   if (findRow(sh, hm[norm("Name")], name)) return { ok: false, error: "Already in the guest list" };
   // Insert after the last guest name so the totals row at the bottom is not overwritten.
   const names = sh.getRange(2, hm[norm("Name")], sh.getLastRow() - 1, 1).getValues();
@@ -102,16 +114,14 @@ function updateAdvance(purpose, paid, date) {
   return { ok: true };
 }
 
-// Room allocation: each sheet row is one guest in one room.
-// Sets the guest's rooms to the list given: reuses the guest's existing rows first,
-// adds rows for extra rooms, and clears rows that are no longer needed.
+// Room allocation: each row of the room sheet is one guest in one room.
+// Reuses the guest's existing rows, adds rows for extra rooms, clears rows no longer needed.
 function setRooms(name, rooms) {
   const clean = (rooms || []).map((r) => String(r).trim()).filter((r) => /^\d{3}$/.test(r));
   const sh = SpreadsheetApp.getActive().getSheetByName(TAB.rooms);
   const hm = headerMap(sh);
   const cRoom = hm[norm("ROOM NO")], cName = hm[norm("Name")];
-  const last = sh.getLastRow();
-  const names = sh.getRange(1, cName, last, 1).getValues();
+  const names = sh.getRange(1, cName, sh.getLastRow(), 1).getValues();
   const target = norm(name);
   const rowsNow = [];
   for (let i = 1; i < names.length; i++) if (norm(names[i][0]) === target) rowsNow.push(i + 1);

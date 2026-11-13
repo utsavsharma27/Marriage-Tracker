@@ -7,7 +7,8 @@ const GUEST_FIELDS = [
   "Category Relative/Friend", "Expect. PAX", "Invitation", "Marriage function",
   "Rooms Required day-I", "Rooms Required Day-II", "Sweets", "Return Gift",
   "Invitation Sent on WA", "Shirt Size", "Sarees",
-  "Checked in", "Saree given", "Shirt given"
+  "Checked in", "Saree given", "Shirt given",
+  "Saree packed", "Shirt packed", "Gift packed"
 ];
 
 function norm(s) { return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim(); }

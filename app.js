@@ -92,6 +92,9 @@
       checkedIn: yes(col(o, "Checked in")),
       sareeGiven: yes(col(o, "Saree given")),
       shirtGiven: yes(col(o, "Shirt given")),
+      sareePacked: yes(col(o, "Saree packed")),
+      shirtPacked: yes(col(o, "Shirt packed")),
+      giftPacked: yes(col(o, "Gift packed")),
     }));
     for (const x of D.guests) D.people.set(norm(x.name), { name: x.name, guest: x, rooms: [] });
 
@@ -160,6 +163,9 @@
     { k: "checkedIn", h: "Checked in", label: "Checked in (green) / not yet (red)", kind: "yn", group: "Check-in & handover" },
     { k: "sareeGiven", h: "Saree given", label: "Saree handed over", kind: "yn", group: "Check-in & handover" },
     { k: "shirtGiven", h: "Shirt given", label: "Shirt handed over", kind: "yn", group: "Check-in & handover" },
+    { k: "sareePacked", h: "Saree packed", label: "Saree packed", kind: "yn", group: "Packing" },
+    { k: "shirtPacked", h: "Shirt packed", label: "Shirt packed", kind: "yn", group: "Packing" },
+    { k: "giftPacked", h: "Gift packed", label: "Gift packed", kind: "yn", group: "Packing" },
   ];
   const fieldBy = (k) => EDIT_FIELDS.find((f) => f.k === k);
   function uniq(...lists) { const s = new Set(); lists.flat().forEach((v) => { if (v !== "" && v != null) s.add(String(v)); }); return [...s]; }
@@ -198,6 +204,9 @@
         ${btn("checkedIn", g && g.checkedIn, "Checked in ✔ (undo)", "Mark checked in")}
         ${btn("sareeGiven", g && g.sareeGiven, "Saree given ✔ (undo)", "Mark saree given")}
         ${btn("shirtGiven", g && g.shirtGiven, "Shirt given ✔ (undo)", "Mark shirt given")}
+        ${btn("sareePacked", g && g.sareePacked, "Saree packed ✔ (undo)", "Mark saree packed")}
+        ${btn("shirtPacked", g && g.shirtPacked, "Shirt packed ✔ (undo)", "Mark shirt packed")}
+        ${btn("giftPacked", g && g.giftPacked, "Gift packed ✔ (undo)", "Mark gift packed")}
         <button class="tab" data-edit-name="${esc(p.name)}">${g ? "Edit" : "Add to guest list"}</button>
       </div>` : "";
     const saree = g ? (g.sarees > 0 ? `${g.sarees} to give · ${tick(g.sareeGiven, "given", "not given yet")}` : `<span class="muted">none</span>`) : "—";
@@ -218,6 +227,7 @@
         <dt>Invitation on WA</dt><dd>${g ? (g.waSent ? "Sent" : "Not sent") : "—"}</dd>
         <dt>Shirt size</dt><dd>${shirt}</dd>
         <dt>Saree</dt><dd>${saree}</dd>
+        <dt>Packed</dt><dd>${g ? `Saree ${g.sareePacked ? "✔" : "✘"} · Shirt ${g.shirtPacked ? "✔" : "✘"} · Gift ${g.giftPacked ? "✔" : "✘"}` : "—"}</dd>
       </dl>
     </div>`;
   }
@@ -387,7 +397,7 @@
     if (!D.people.has(k)) D.people.set(k, p);
     if (!p.guest) {
       p.guest = { name, category: "", pax: null, invitation: "", function: false, roomsDay1: null, roomsDay2: null,
-                  sweets: false, gift: false, waSent: false, shirt: "", sarees: 0, checkedIn: false, sareeGiven: false, shirtGiven: false };
+                  sweets: false, gift: false, waSent: false, shirt: "", sarees: 0, checkedIn: false, sareeGiven: false, shirtGiven: false, sareePacked: false, shirtPacked: false, giftPacked: false };
       D.guests.push(p.guest);
     }
     Object.assign(p.guest, local);
@@ -409,7 +419,7 @@
   function openEditor(name) {
     const p = D.people.get(norm(name)) || { name, guest: null, rooms: [] };
     const g = p.guest;
-    const sections = ["Guest details", "Gifts & sarees", "Check-in & handover"];
+    const sections = ["Guest details", "Gifts & sarees", "Packing", "Check-in & handover"];
     const body = sections.map((sec) => `
       <div class="ed-sec">${sec}</div>
       ${EDIT_FIELDS.filter((f) => f.group === sec).map((f) => {
